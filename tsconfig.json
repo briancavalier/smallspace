@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": [
+      "ES2019.Array"
+    ],
+    "outDir": "./dist",
+    "strict": true,
+    "types": [
+      "@types/node"
+    ],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+  },
+  "exclude": [
+    "examples"
+  ]
+}
