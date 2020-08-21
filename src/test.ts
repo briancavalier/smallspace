@@ -18,8 +18,8 @@ export const defaultTestConfig: TestConfig<Nat> = {
   }
 }
 
-export const assert = <A, R>(p: Property<Nat, A, R>, { maxExamples, minDepth: startDepth, maxDepth, evaluateResult }: TestConfig<Nat> = defaultTestConfig): void => {
-  let n = startDepth, examples = 0
+export const assert = <A, R>(p: Property<Nat, A, R>, { maxExamples, minDepth, maxDepth, evaluateResult }: TestConfig<Nat> = defaultTestConfig): void => {
+  let n = minDepth, examples = 0
   while (examples < maxExamples && n < maxDepth) {
     const rs = p(n)
     rs.forEach((r, i) => evaluateResult(r, examples + i))
@@ -28,9 +28,9 @@ export const assert = <A, R>(p: Property<Nat, A, R>, { maxExamples, minDepth: st
   }
 }
 
-export const enumerate = <A>(s: Source<Nat, A>, { maxExamples, minDepth: startDepth, maxDepth, evaluateResult }: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
+export const enumerate = <A>(s: Source<Nat, A>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
   const results = []
-  let n = startDepth
+  let n = minDepth
   while (results.length < maxExamples && n < maxDepth) {
     results.push(...s(n))
     n += 1
