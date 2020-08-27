@@ -1,7 +1,7 @@
 import { inspect } from 'util'
 
-import { prop, Property } from './property'
-import { Nat, Source, Sources, Values } from './source'
+import { Property } from './property'
+import { Nat, Source } from './source'
 
 export type TestConfig<N> = {
   minDepth: N,
@@ -15,7 +15,7 @@ export const defaultTestConfig: TestConfig<Nat> = {
   maxExamples: parseInt(process?.env?.SMALLS_MAX_EXAMPLES ?? '', 10) || 100
 }
 
-export const check = <A>(p: Property<Nat, A, boolean>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): void => {
+export const check = <A>(p: Property<A, boolean>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): void => {
   let n = minDepth, examples = 0
   while (examples < maxExamples && n < maxDepth) {
     const rs = p(n)
@@ -26,7 +26,7 @@ export const check = <A>(p: Property<Nat, A, boolean>, { maxExamples, minDepth, 
   }
 }
 
-export function* sample<A>(s: Source<Nat, A>, { minDepth, maxDepth, maxExamples } = defaultTestConfig): Iterable<A> {
+export function* sample<A>(s: Source<A>, { minDepth, maxDepth, maxExamples } = defaultTestConfig): Iterable<A> {
   let i = 0
   let n = minDepth
   while (i < maxExamples && n < maxDepth) {
@@ -37,11 +37,11 @@ export function* sample<A>(s: Source<Nat, A>, { minDepth, maxDepth, maxExamples 
   }
 }
 
-export const collect = <A>(s: Source<Nat, A>, c: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
+export const collect = <A>(s: Source<A>, c: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
   const results = []
   for (const r of sample(s, c)) results.push(r)
   return results
 }
 
-export const show = <A>(s: Source<Nat, A>, c: TestConfig<Nat> = defaultTestConfig): string =>
+export const show = <A>(s: Source<A>, c: TestConfig<Nat> = defaultTestConfig): string =>
   collect(s, c).map(s => `(${inspect(s)})`).join(' ')

@@ -1,10 +1,10 @@
 import { cartesian } from './array'
-import { Source, Sources, Values } from './source'
+import { Nat, Source, Values } from './source'
 
-export type Property<N, A, R> = Source<N, Result<N, A, R>>
+export type Property<A, R> = Source<Result<A, R>>
 
-export type Result<N, A, R> = { depth: N, input: A, result: R }
+export type Result<A, R> = { depth: Nat, input: A, result: R }
 
-export const prop = <N, S extends readonly Source<any, any>[], R>(f: (...args: Values<S>) => R, ...sources: S): Source<N, Result<N, Values<S>, R>> =>
-  (n: N) => cartesian(sources.map(s => s(n))).map(input =>
-    ({ depth: n, input, result: f(...(input as any)) })) as unknown as readonly Result<N, Values<S>, R>[]
+export const prop = <S extends readonly Source<any>[], R>(f: (...args: Values<S>) => R, ...sources: S): Source<Result<Values<S>, R>> =>
+  (n: Nat) => cartesian(sources.map(s => s(n))).map(input =>
+    ({ depth: n, input, result: f(...(input as any)) })) as unknown as readonly Result<Values<S>, R>[]
