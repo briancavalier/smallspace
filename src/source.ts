@@ -31,6 +31,9 @@ export const scale = <A>(n: number, s: Source<Nat, A>): Source<Nat, A> =>
 export const map = <N, A, B>(s: Source<N, A>, f: (a: A) => B): Source<N, B> =>
   n => s(n).map(f)
 
+export const filterDepth = <A>(p: (n: Nat) => boolean, s: Source<Nat, A>): Source<Nat, A> =>
+  n => p(n) ? s(n) : []
+
 // Basic Sources
 
 export const always = <N, A>(a: A): Source<N, A> => _ => [a]
@@ -72,7 +75,7 @@ export type RecordsOf<Sources extends Record<PropertyKey, Source<Nat, any>>> = S
 
 export const record = <SS extends Record<PropertyKey, Source<any, any>>>(rs: SS): RecordsOf<SS> => {
   const ks = Object.keys(rs) as readonly (keyof SS)[]
-  return shift(1, map(tuple(...Object.values(rs)), t => {
+  return filterDepth(n => n > 0, map(tuple(...Object.values(rs)), t => {
     const r = {} as RecordOf<SS>
     for (let i = 0; i < ks.length; i++) {
       r[ks[i]] = t[i]
