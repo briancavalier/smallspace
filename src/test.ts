@@ -15,9 +15,6 @@ export const defaultTestConfig: TestConfig<Nat> = {
   maxExamples: parseInt(process?.env?.SMALLS_MAX_EXAMPLES ?? '', 10) || 100
 }
 
-export const check2 = <S extends readonly Source<Nat, any>[]>(f: (...args: Values<S>) => boolean, sources: S, c: TestConfig<Nat> = defaultTestConfig): void =>
-  check(prop(f, ...sources), c)
-
 export const check = <A>(p: Property<Nat, A, boolean>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): void => {
   let n = minDepth, examples = 0
   while (examples < maxExamples && n < maxDepth) {
