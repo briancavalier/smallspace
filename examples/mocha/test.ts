@@ -1,11 +1,17 @@
+import assert from 'assert'
 import { describe, it } from 'mocha'
 
-import { assert, char, prop, string } from '../../src'
+import { check, prop, sample, string } from '../../src'
 
 const reverse = (s: string): string => [...s].reverse().join('')
 
 describe('reverse', () => {
   it('invariant length', () => {
-    assert(prop(reverse, (r, s) => r.length === s.length, string(char('abc'))))
+    for (const s of sample(string())) {
+      assert.strictEqual(s.length, reverse(s).length)
+    }
   })
+
+  it('invariant length', () =>
+    check(prop(s => reverse(s).length === s.length, string())))
 })

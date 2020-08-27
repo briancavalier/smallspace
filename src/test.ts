@@ -1,42 +1,50 @@
-import { Property, Result } from './property'
-import { Nat, Source } from './source'
+import { inspect } from 'util'
+
+import { prop, Property } from './property'
+import { Nat, Source, Sources, Values } from './source'
 
 export type TestConfig<N> = {
   minDepth: N,
   maxDepth: N,
-  maxExamples: number,
-  evaluateResult: <A, R>(r: Result<N, A, R>, i: number) => void
+  maxExamples: number
 }
 
 export const defaultTestConfig: TestConfig<Nat> = {
   minDepth: parseInt(process?.env?.SMALLS_MIN_DEPTH ?? '') || 0,
-  maxDepth: parseInt(process?.env?.SMALLS_MAX_DEPTH ?? '') || 4,
-  maxExamples: parseInt(process?.env?.SMALLS_MAX_EXAMPLES ?? '', 10) || 100,
-  evaluateResult: <N, A, R>(r: Result<N, A, R>, i: number): void => {
-    if (!r.ok) throw new Error(`Counterexample (tries: ${i + 1}, depth: ${r.depth})
-      ${JSON.stringify(r.input)} -> result: ${JSON.stringify(r.result)}`)
-  }
+  maxDepth: parseInt(process?.env?.SMALLS_MAX_DEPTH ?? '') || 5,
+  maxExamples: parseInt(process?.env?.SMALLS_MAX_EXAMPLES ?? '', 10) || 100
 }
 
-export const assert = <A, R>(p: Property<Nat, A, R>, { maxExamples, minDepth, maxDepth, evaluateResult }: TestConfig<Nat> = defaultTestConfig): void => {
+export const check2 = <S extends readonly Source<Nat, any>[]>(f: (...args: Values<S>) => boolean, sources: S, c: TestConfig<Nat> = defaultTestConfig): void =>
+  check(prop(f, ...sources), c)
+
+export const check = <A>(p: Property<Nat, A, boolean>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): void => {
   let n = minDepth, examples = 0
   while (examples < maxExamples && n < maxDepth) {
     const rs = p(n)
-    rs.forEach((r, i) => evaluateResult(r, examples + i))
+    const ri = rs.find(r => !r.result)
+    if (ri) throw new Error(`Counterexample: ${ri.input} -> ${ri.result}`)
     examples += rs.length
     n += 1
   }
 }
 
-export const enumerate = <A>(s: Source<Nat, A>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
-  const results = []
+export function* sample<A>(s: Source<Nat, A>, { minDepth, maxDepth, maxExamples } = defaultTestConfig): Iterable<A> {
+  let i = 0
   let n = minDepth
-  while (results.length < maxExamples && n < maxDepth) {
-    results.push(...s(n))
+  while (i < maxExamples && n < maxDepth) {
+    const rs = s(n)
+    yield* rs
+    i += rs.length
     n += 1
   }
+}
+
+export const collect = <A>(s: Source<Nat, A>, c: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
+  const results = []
+  for (const r of sample(s, c)) results.push(r)
   return results
 }
 
-export const show = <A>(s: Source<Nat, A>, config: TestConfig<Nat> = defaultTestConfig): string =>
-  enumerate(s, config).map(s => `(${s})`).join(', ')
+export const show = <A>(s: Source<Nat, A>, c: TestConfig<Nat> = defaultTestConfig): string =>
+  collect(s, c).map(s => `(${inspect(s)})`).join(' ')

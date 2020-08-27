@@ -1,9 +1,8 @@
-import { cartesian } from './array'
+import { cartesian, chain } from './array'
 
 export type Nat = number
 
 export type Source<N, A> = (n: N) => readonly A[]
-export type AsyncSource<N, A> = (n: N) => Promise<readonly A[]>
 
 export type Sources<N, A extends readonly unknown[]> = {
   readonly [I in keyof A]: Source<N, A[I]>
@@ -50,26 +49,41 @@ export const number: Source<Nat, number> = n => n === 0 ? [NaN, -Infinity, Infin
 
 const withNegatives = (x: number, y = 1 / x): [number, number, number, number] => [-x, -y, x, y]
 
-export const char = (chars: string): Source<Nat, string> =>
-  // n => n < chars.length ? [chars.charAt(n)] : []
+export const char = (chars: string = 'abc'): Source<Nat, string> =>
   n => chars.slice(0, n + 1).split('')
 
-export const string = (s: Source<Nat, string>): Source<Nat, string> =>
-  map(array(s), chars => chars.join(''))
+export const string = (s: Source<Nat, string> = char(), sep: string = ''): Source<Nat, string> =>
+  map(array(s), chars => chars.join(sep))
 
 // Products
 
 export const array = <A>(s: Source<Nat, A>): Source<Nat, readonly A[]> =>
-  n => n === 0 ? [[]] : cartesian(Array(n).fill(n - 1).map(s))
+  n => n === 0 ? [[]] : cartesian(Array(n).fill(s(n - 1)))
 
 export type TupleOf<Sources extends readonly Source<any, any>[]> = Source<Depths<Sources>[number], Values<Sources>>
 
 export const tuple = <SS extends readonly Source<Nat, any>[]>(...sources: SS): TupleOf<SS> =>
   n => n === 0 ? [[]] as any : cartesian(sources.map(s => s(n - 1))) as unknown as Values<SS>
 
+export type RecordOf<Sources extends Record<PropertyKey, Source<Nat, any>>> = {
+  [K in keyof Sources]: Value<Sources[K]>
+}
+export type RecordsOf<Sources extends Record<PropertyKey, Source<Nat, any>>> = Source<Nat, RecordOf<Sources>>
+
+export const record = <SS extends Record<PropertyKey, Source<any, any>>>(rs: SS): RecordsOf<SS> => {
+  const ks = Object.keys(rs) as readonly (keyof SS)[]
+  return shift(1, map(tuple(...Object.values(rs)), t => {
+    const r = {} as RecordOf<SS>
+    for (let i = 0; i < ks.length; i++) {
+      r[ks[i]] = t[i]
+    }
+    return r
+  }))
+}
+
 // Coproducts
 
 export type OneOf<Sources extends readonly Source<any, any>[]> = Source<Depths<Sources>[number], Values<Sources>[number]>
 
 export const oneof = <SS extends readonly Source<any, any>[]>(...sources: SS): OneOf<SS> =>
-  n => sources.flatMap(s => s(n))
+  n => chain(sources, s => s(n))

@@ -14,3 +14,10 @@ export const cartesian = <Args extends readonly (readonly unknown[])[]>(args: Ar
   helper(args.length - 1, r, [], 0)
   return r
 }
+
+// Replacement for flatMap
+export const chain = <A, B>(as: readonly A[], f: (a: A) => readonly B[]): readonly B[] => {
+  const bs: B[] = []
+  for (const a of as) bs.push(...f(a))
+  return bs
+}
