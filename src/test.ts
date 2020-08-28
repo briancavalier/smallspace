@@ -44,4 +44,4 @@ export const collect = <A>(s: Source<A>, c: TestConfig<Nat> = defaultTestConfig)
 }
 
 export const show = <A>(s: Source<A>, c: TestConfig<Nat> = defaultTestConfig): string =>
-  collect(s, c).map(s => `(${inspect(s)})`).join(' ')
+  collect(s, c).map(s => inspect(s)).join('\n')

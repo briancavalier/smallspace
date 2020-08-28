@@ -1,6 +1,6 @@
 import {
-  array, bigint, boolean, defaultTestConfig, float, int, nat, number, oneof, record, show, string,
-  tuple
+  array, bigint, boolean, char, defaultTestConfig, float, int, nat, number, oneof, record, show,
+  string, tuple
 } from '../src'
 
 console.log('Up to depth', defaultTestConfig.maxDepth)
@@ -11,6 +11,7 @@ console.log(`int\n${show(int)}\n`)
 console.log(`bigint\n${show(bigint)}\n`)
 console.log(`float\n${show(float)}\n`)
 console.log(`number\n${show(number)}\n`)
+console.log(`char\n${show(char())}\n`)
 console.log(`string\n${show(string())}\n`)
 
 // Products
@@ -21,4 +22,6 @@ console.log(`record\n${show(record({ foo: string(), bar: int }))}\n`)
 
 // Sums
 
-console.log(`oneof\n${show(oneof(number, string()))}\n`)
+console.log(`oneof\n${show(oneof(number, char()))}\n`)
+
+// console.log(`tuple\n${show(tuple(int, char()))}\n`)

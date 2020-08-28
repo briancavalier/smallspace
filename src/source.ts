@@ -33,7 +33,7 @@ export const filterDepth = <A>(p: (n: Nat) => boolean, s: Source<A>): Source<A> 
 
 export const always = <A>(a: A): Source<A> => _ => [a]
 
-export const boolean: Source<boolean> = n => n === 1 ? [false, true] : []
+export const boolean: Source<boolean> = n => n === 0 ? [] : [false, true]
 
 export const nat: Source<Nat> = n => [n]
 
@@ -47,7 +47,9 @@ export const number: Source<number> = n => n === 0 ? [0, -1, NaN, Infinity, -Inf
 
 const withNegatives = (x: number, y = 1 / x): [number, number, number, number] => [x, y, -x, -y]
 
-export const char = (chars: string = 'abc'): Source<string> =>
+export const defaultChars = 'abcdefghijklmnopqrstuvwxyz'
+
+export const char = (chars: string = defaultChars): Source<string> =>
   n => chars.slice(0, n + 1).split('')
 
 export const string = (s: Source<string> = char(), sep: string = ''): Source<string> =>
