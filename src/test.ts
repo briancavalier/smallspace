@@ -1,32 +1,41 @@
-import { inspect } from 'util'
-
-import { Property } from './property'
+import { Property, Result } from './property'
 import { Nat, Source } from './source'
 
-export type TestConfig<N> = {
-  minDepth: N,
-  maxDepth: N,
-  maxExamples: number
-}
+export type TestBounds = { minDepth: Nat, maxDepth: Nat, maxExamples: number }
 
-export const defaultTestConfig: TestConfig<Nat> = {
+export const defaultTestBounds: TestBounds = {
   minDepth: parseInt(process?.env?.SMALLS_MIN_DEPTH ?? '') || 0,
   maxDepth: parseInt(process?.env?.SMALLS_MAX_DEPTH ?? '') || 5,
   maxExamples: parseInt(process?.env?.SMALLS_MAX_EXAMPLES ?? '', 10) || 100
 }
 
-export const check = <A>(p: Property<A, boolean>, { maxExamples, minDepth, maxDepth }: TestConfig<Nat> = defaultTestConfig): void => {
+export type Counterexample<A> = Result<A, false>
+
+export const isCounterexample = <A>(r: Result<A, boolean>): r is Counterexample<A> =>
+  r.result === false
+
+export const check = <A>(p: Property<A, boolean>, { maxExamples, minDepth, maxDepth }: TestBounds = defaultTestBounds): Counterexample<A> | undefined => {
   let n = minDepth, examples = 0
   while (examples < maxExamples && n < maxDepth) {
     const rs = p(n)
-    const ri = rs.find(r => !r.result)
-    if (ri) throw new Error(`Counterexample: ${ri.input} -> ${ri.result}`)
+    for (const ri of rs) if (isCounterexample(ri)) return ri
     examples += rs.length
     n += 1
   }
 }
 
-export function* sample<A>(s: Source<A>, { minDepth, maxDepth, maxExamples } = defaultTestConfig): Iterable<A> {
+export class CounterexampleError<A> extends Error {
+  constructor(public readonly counterexample: Counterexample<A>, public readonly bounds: TestBounds, message?: string) {
+    super(message)
+  }
+}
+
+export const assert = <A>(p: Property<A, boolean>, b: TestBounds = defaultTestBounds): void => {
+  const ri = check(p, b)
+  if (ri) throw new CounterexampleError(ri, b, `Counterexample: ${ri.input} -> ${ri.result}`)
+}
+
+export function* sample<A>(s: Source<A>, { minDepth, maxDepth, maxExamples } = defaultTestBounds): Iterable<A> {
   let i = 0
   let n = minDepth
   while (i < maxExamples && n < maxDepth) {
@@ -36,12 +45,3 @@ export function* sample<A>(s: Source<A>, { minDepth, maxDepth, maxExamples } = d
     n += 1
   }
 }
-
-export const collect = <A>(s: Source<A>, c: TestConfig<Nat> = defaultTestConfig): readonly A[] => {
-  const results = []
-  for (const r of sample(s, c)) results.push(r)
-  return results
-}
-
-export const show = <A>(s: Source<A>, c: TestConfig<Nat> = defaultTestConfig): string =>
-  collect(s, c).map(s => inspect(s)).join('\n')

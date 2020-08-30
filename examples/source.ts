@@ -1,27 +1,33 @@
+import { inspect } from 'util'
+
 import {
-  array, bigint, boolean, char, defaultTestConfig, float, int, nat, number, oneof, record, show,
-  string, tuple
+  array, bigint, boolean, char, date, defaultTestBounds, float, int, nat, number, oneof, record,
+  sample, scale, Source, string, tuple
 } from '../src'
 
-console.log('Up to depth', defaultTestConfig.maxDepth)
+console.log('Up to depth', defaultTestBounds.maxDepth)
 
-console.log(`boolean\n${show(boolean)}\n`)
-console.log(`nat\n${show(nat)}\n`)
-console.log(`int\n${show(int)}\n`)
-console.log(`bigint\n${show(bigint)}\n`)
-console.log(`float\n${show(float)}\n`)
-console.log(`number\n${show(number)}\n`)
-console.log(`char\n${show(char())}\n`)
-console.log(`string\n${show(string())}\n`)
+const show = <A>(name: string, s: Source<A>): void => {
+  process.stdout.write(`\n${name}\n`)
+  process.stdout.write(`${[...sample(s)].map(a => inspect(a)).join('\n')}\n`)
+}
+
+show('boolean', boolean)
+show('nat', nat)
+show('int', int)
+show('bigint', bigint)
+show('float', float)
+show('number', number)
+show('char', char())
+show('string', string())
+show('date', date(new Date(), scale(60 * 60 * 1000, int)))
 
 // Products
 
-console.log(`array\n${show(array(number))}\n`)
-console.log(`tuple\n${show(tuple(number, string(), int))}\n`)
-console.log(`record\n${show(record({ foo: string(), bar: int }))}\n`)
+show('array(number)', array(number))
+show('tuple(number, string, int)', tuple(number, string(), int))
+show('record({ foo: string, bar: int })', record({ foo: string(), bar: int }))
 
 // Sums
 
-console.log(`oneof\n${show(oneof(number, char()))}\n`)
-
-// console.log(`tuple\n${show(tuple(int, char()))}\n`)
+show('oneof(number, char)', oneof(number, char()))

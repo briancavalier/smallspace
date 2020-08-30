@@ -52,8 +52,11 @@ export const defaultChars = 'abcdefghijklmnopqrstuvwxyz'
 export const char = (chars: string = defaultChars): Source<string> =>
   n => chars.slice(0, n + 1).split('')
 
-export const string = (s: Source<string> = char(), sep: string = ''): Source<string> =>
-  map(array(s), chars => chars.join(sep))
+export const string = (chars: string = defaultChars): Source<string> =>
+  n => [chars.slice(0, n)]
+
+export const date = (origin: Date, offset: Source<number> = int): Source<Date> =>
+  map(offset, t => new Date(origin.getTime() + t))
 
 // Products
 
