@@ -14,6 +14,9 @@ export type Values<S extends readonly Source<any>[]> = {
   readonly [I in keyof S]: Value<S[I]>
 }
 
+export const map = <A, B>(s: Source<A>, f: (a: A) => B): Source<B> =>
+  n => s(n).map(f)
+
 export const mapDepth = <A>(f: (n: Nat) => Nat, s: Source<A>): Source<A> =>
   n => s(f(n))
 
@@ -22,9 +25,6 @@ export const shift = <A>(n: Nat, s: Source<A>): Source<A> =>
 
 export const scale = <A>(n: number, s: Source<A>): Source<A> =>
   mapDepth(n0 => Math.max(0, Math.trunc(n0 * n)), s)
-
-export const map = <A, B>(s: Source<A>, f: (a: A) => B): Source<B> =>
-  n => s(n).map(f)
 
 export const filterDepth = <A>(p: (n: Nat) => boolean, s: Source<A>): Source<A> =>
   n => p(n) ? s(n) : []

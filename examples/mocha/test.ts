@@ -12,6 +12,7 @@ describe('reverse', () => {
     }
   })
 
-  it('invariant length', () =>
-    assert(prop(s => reverse(s).length === s.length, string())))
+  it('invariant length', () => {
+    assert(prop(s => reverse(s).length === s.length, string()))
+  })
 })
