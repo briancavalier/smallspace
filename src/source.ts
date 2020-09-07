@@ -43,7 +43,7 @@ export const bigint: Source<bigint> = map(int, BigInt)
 
 export const float: Source<number> = n => n === 0 ? [0, -0] : n === 1 ? [1, -1] : withNegatives(2 ** (n - 1))
 
-export const number: Source<number> = n => n === 0 ? [0, -1, NaN, Infinity, -Infinity] : n === 1 ? [-1, 1] : withNegatives(2 ** (n - 1))
+export const number: Source<number> = n => n === 0 ? [0, -0, NaN, Infinity, -Infinity] : n === 1 ? [-1, 1] : withNegatives(2 ** (n - 1))
 
 const withNegatives = (x: number, y = 1 / x): [number, number, number, number] => [x, y, -x, -y]
 
@@ -63,10 +63,10 @@ export const date = (origin: Date, offset: Source<number> = int): Source<Date> =
 export const array = <A>(s: Source<A>): Source<readonly A[]> =>
   n => n === 0 ? [[]] : cartesian(Array(n).fill(s(n - 1)))
 
-export type TupleOf<Sources extends readonly Source<any>[]> = Source<Values<Sources>>
+export type TupleSource<Sources extends readonly Source<any>[]> = Source<Values<Sources>>
 
-export const tuple = <SS extends readonly Source<any>[]>(...sources: SS): TupleOf<SS> =>
-  n => n === 0 ? [[]] as any : unsafeTuple(n - 1, sources)
+export const tuple = <SS extends readonly Source<any>[]>(...sources: SS): TupleSource<SS> =>
+  n => unsafeTuple(n, sources)
 
 const unsafeTuple = <SS extends readonly Source<any>[]>(n: Nat, sources: SS): Values<SS> =>
   cartesian(sources.map(s => s(n))) as unknown as Values<SS>
@@ -74,9 +74,9 @@ const unsafeTuple = <SS extends readonly Source<any>[]>(n: Nat, sources: SS): Va
 export type RecordOf<Sources extends Record<PropertyKey, Source<any>>> = {
   [K in keyof Sources]: Value<Sources[K]>
 }
-export type RecordsOf<Sources extends Record<PropertyKey, Source<any>>> = Source<RecordOf<Sources>>
+export type RecordSource<Sources extends Record<PropertyKey, Source<any>>> = Source<RecordOf<Sources>>
 
-export const record = <SS extends Record<PropertyKey, Source<any>>>(rs: SS): RecordsOf<SS> => {
+export const record = <SS extends Record<PropertyKey, Source<any>>>(rs: SS): RecordSource<SS> => {
   const ks = Object.keys(rs) as readonly (keyof SS)[]
   return filterDepth(n => n > 0, map(tuple(...Object.values(rs)), t => {
     const r = {} as RecordOf<SS>
@@ -87,7 +87,7 @@ export const record = <SS extends Record<PropertyKey, Source<any>>>(rs: SS): Rec
 
 // Coproducts
 
-export type OneOf<Sources extends readonly Source<any>[]> = Source<Values<Sources>[number]>
+export type OneOfSource<Sources extends readonly Source<any>[]> = Source<Values<Sources>[number]>
 
-export const oneof = <SS extends readonly Source<any>[]>(...sources: SS): OneOf<SS> =>
+export const oneof = <SS extends readonly Source<any>[]>(...sources: SS): OneOfSource<SS> =>
   n => chain(sources, s => s(n))
